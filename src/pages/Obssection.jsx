@@ -55,8 +55,9 @@ function computeResult(wrlObs = [], vendorObs = [], spec) {
 }
 
 // ── ObsCell ───────────────────────────────────────────────────────────────────
-function ObsCell({ val, spec, isDim, locked, onChange }) {
+function ObsCell({ val, spec, isDim, testType, locked, onChange }) {
   const ok = isDim ? checkVal(val, spec) : null;
+  const isVisual = testType === 'Vis';
 
   if (locked) {
     return (
@@ -72,20 +73,36 @@ function ObsCell({ val, spec, isDim, locked, onChange }) {
     );
   }
 
+  // For Visual tests: dropdown with OK/N.OK
+  if (isVisual) {
+    return (
+      <select
+        value={val ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-24 h-8 border rounded px-2 py-1 text-center font-semibold text-[12px] outline-none transition-all bg-white border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-slate-700 cursor-pointer"
+      >
+        <option value="">—</option>
+        <option value="OK">✓ OK</option>
+        <option value="N.OK">✕ N.OK</option>
+      </select>
+    );
+  }
+
+  // For Dimensional/Reliability: number input
   return (
     <input
-      type={isDim ? 'number' : 'text'}
-      inputMode={isDim ? 'decimal' : 'text'}
+      type="number"
+      inputMode="decimal"
       step="0.01"
       value={val ?? ''}
-      placeholder={isDim ? '0.00' : 'txt'}
+      placeholder="0.00"
       autoComplete="off"
       tabIndex={0}
       onFocus={(e) => e.currentTarget.select()}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-20 h-8 border rounded px-2 py-1 text-center font-mono text-[12px] outline-none transition-all bg-white border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
-        ok === false ? 'text-red-600 font-bold bg-red-50'
-        : ok === true ? 'text-green-700 font-bold bg-green-50'
+      className={`w-24 h-8 border rounded px-2 py-1 text-center font-mono font-bold text-[12px] outline-none transition-all bg-white border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 cursor-text pointer-events-auto ${
+        ok === false ? 'text-red-600 bg-red-50 border-red-400'
+        : ok === true ? 'text-green-700 bg-green-50 border-green-400'
         : 'text-slate-700'
       }`}
     />
@@ -104,7 +121,7 @@ function ObsCell({ val, spec, isDim, locked, onChange }) {
  *     wrlObservations: string[],    // length === maxObs
  *     remark, docFile }
  */
-function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onDelete, canDelete }) {
+function ObsRow({ row, rIdx, isDim, type, locked, maxObs, onUpdate, onUpdateField, onDelete, canDelete }) {
   const wrlObs = Array.from({ length: maxObs }, (_, idx) => row.wrlObservations?.[idx] ?? '');
   const wrlResult = computeResult(wrlObs, [], row.spec);
   const isObservationLocked = (oIdx) => locked && oIdx >= 3;
@@ -173,6 +190,7 @@ function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onD
             val={wrlObs[oIdx]}
             spec={row.spec}
             isDim={isDim}
+            testType={type}
             locked={isObservationLocked(oIdx)}
             onChange={(v) => onUpdate(rIdx, 'wrl', oIdx, v)}
           />
@@ -273,6 +291,7 @@ export default function ObsSection({
                     rIdx={rIdx}
                     secKey={secKey}
                     isDim={isDim}
+                    type={type}
                     locked={locked}
                     maxObs={maxObs}
                     onUpdate={onUpdate}
