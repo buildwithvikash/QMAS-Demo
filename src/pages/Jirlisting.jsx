@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { StatusBadge } from '../components/Badge';
-import StatCard from '../components/StatCard';
+import StatCard from '../components/Statcard';
 import { ageColor } from '../utils/helpers';
 
 export default function JIRListing() {
