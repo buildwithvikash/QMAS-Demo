@@ -83,9 +83,9 @@ function ObsCell({ val, spec, isDim, locked, onChange }) {
       tabIndex={0}
       onFocus={(e) => e.currentTarget.select()}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-16 border rounded px-1.5 py-1 text-center font-mono text-[11.5px] outline-none transition-all bg-slate-50 border-slate-200 focus:border-blue-400 focus:bg-white pointer-events-auto ${
-        ok === false ? 'text-red-600 font-bold'
-        : ok === true ? 'text-green-700'
+      className={`w-20 h-8 border rounded px-2 py-1 text-center font-mono text-[12px] outline-none transition-all bg-white border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+        ok === false ? 'text-red-600 font-bold bg-red-50'
+        : ok === true ? 'text-green-700 font-bold bg-green-50'
         : 'text-slate-700'
       }`}
     />
