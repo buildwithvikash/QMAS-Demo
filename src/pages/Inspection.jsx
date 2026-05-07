@@ -59,16 +59,16 @@ export default function Inspection() {
     setJirs(prev => prev.map(x => x.jirNo === j.jirNo ? updater(x) : x));
   };
 
-  // ── FIXED: accepts subRow ('wrl' | 'vendor') as 2nd argument ──────────────
+  // ── FIXED: accepts 'wrl' subRow only ──────────────
   const handleObsUpdate = useCallback((secKey, rIdx, subRow, oIdx, val) => {
+    if (subRow !== 'wrl') return; // Only handle WRL observations
     updateJirLocal(jir => {
       const updated = { ...jir };
       updated[secKey] = jir[secKey].map((row, ri) => {
         if (ri !== rIdx) return row;
-        const field = subRow === 'wrl' ? 'wrlObservations' : 'vendorObservations';
-        const obs = [...(row[field] || [])];
+        const obs = [...(row.wrlObservations || [])];
         obs[oIdx] = val === '' ? null : val;
-        return { ...row, [field]: obs };
+        return { ...row, wrlObservations: obs };
       });
       return updated;
     });
@@ -86,25 +86,19 @@ export default function Inspection() {
     updateJirLocal(jir => ({ ...jir, [secKey]: jir[secKey].filter((_, ri) => ri !== rIdx) }));
   }, [j.jirNo]);
 
-  // ── FIXED: adds a column to both wrlObservations and vendorObservations ────
+  // ── FIXED: adds a column to wrlObservations only ────
   const handleAddColumn = useCallback((secKey) => {
     updateJirLocal(jir => ({
       ...jir,
       [secKey]: jir[secKey].map(row => ({
         ...row,
         wrlObservations: [...(row.wrlObservations || []), null],
-        vendorObservations: [...(row.vendorObservations || []), null],
       }))
     }));
   }, [j.jirNo]);
 
-  // ── FIXED: reads from wrlObservations / vendorObservations ─────────────────
-  const maxObs = (secKey) => Math.max(3, ...(j[secKey] || []).map(r =>
-    Math.max(
-      (r.wrlObservations || []).length,
-      (r.vendorObservations || []).length
-    )
-  ));
+  // ── FIXED: reads from wrlObservations only ─────────────────
+  const maxObs = (secKey) => Math.max(3, ...(j[secKey] || []).map(r => (r.wrlObservations || []).length));
 
   const getDecisionName = () => {
     const { selPrimary, selHold } = decState;
@@ -218,9 +212,8 @@ export default function Inspection() {
           type={type}
           rows={(j[secKey] || []).map(row => ({
             ...row,
-            // ── migrate legacy flat `observations` array into wrl/vendor shape
+            // ── migrate legacy flat `observations` array into wrl shape
             wrlObservations: row.wrlObservations ?? row.observations ?? [],
-            vendorObservations: row.vendorObservations ?? [],
           }))}
           locked={locked}
           maxObs={maxObs(secKey)}

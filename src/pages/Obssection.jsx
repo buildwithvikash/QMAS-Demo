@@ -94,43 +94,37 @@ function ObsCell({ val, spec, isDim, locked, onChange }) {
 
 // ── ObsRow ────────────────────────────────────────────────────────────────────
 /**
- * Renders TWO <tr> elements — WRL and Vendor — inside a React fragment.
+ * Renders a single row for WRL observations.
  *
- * Shared columns (Sr → Place, Avg, Result, Doc, Remark, Delete)
- * use rowSpan={2} and are rendered only in the first (WRL) row.
- *
- * onUpdate(rIdx, subRow, oIdx, value)
- *   subRow: 'wrl' | 'vendor'
+ * onUpdate(rIdx, 'wrl', oIdx, value)
+ *   subRow is always 'wrl'
  *
  * Row shape expected:
  *   { checkpoint, spec, uom, instrument, frequency, place,
  *     wrlObservations: string[],    // length === maxObs
- *     vendorObservations: string[], // length === maxObs
  *     remark, docFile }
  */
 function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onDelete, canDelete }) {
   const wrlObs = Array.from({ length: maxObs }, (_, idx) => row.wrlObservations?.[idx] ?? '');
-  const vendorObs = Array.from({ length: maxObs }, (_, idx) => row.vendorObservations?.[idx] ?? '');
   const wrlResult = computeResult(wrlObs, [], row.spec);
-  const vendorResult = computeResult([], vendorObs, row.spec);
   const isObservationLocked = (oIdx) => locked && oIdx >= 3;
 
   const sharedLeft = (
     <>
-      <td rowSpan={2} className="px-3 py-2 font-mono text-[11px] text-slate-400 align-middle">{rIdx + 1}</td>
-      <td rowSpan={2} className="px-3 py-2 font-semibold text-[12.5px] whitespace-nowrap align-middle text-slate-800">{row.checkpoint}</td>
-      <td rowSpan={2} className="px-3 py-2 font-mono text-[11.5px] text-amber-600 font-bold whitespace-nowrap align-middle">{row.spec}</td>
-      <td rowSpan={2} className="px-3 py-2 text-slate-400 text-[11.5px] align-middle">{row.uom}</td>
-      <td rowSpan={2} className="px-3 py-2 text-slate-500 text-[11.5px] align-middle">{row.instrument || '—'}</td>
-      <td rowSpan={2} className="px-3 py-2 font-mono text-[10.5px] text-slate-400 align-middle">{row.frequency}</td>
-      <td rowSpan={2} className="px-3 py-2 text-[11.5px] text-slate-400 align-middle">{row.place}</td>
+      <td className="px-3 py-2 font-mono text-[11px] text-slate-400 align-middle">{rIdx + 1}</td>
+      <td className="px-3 py-2 font-semibold text-[12.5px] whitespace-nowrap align-middle text-slate-800">{row.checkpoint}</td>
+      <td className="px-3 py-2 font-mono text-[11.5px] text-amber-600 font-bold whitespace-nowrap align-middle">{row.spec}</td>
+      <td className="px-3 py-2 text-slate-400 text-[11.5px] align-middle">{row.uom}</td>
+      <td className="px-3 py-2 text-slate-500 text-[11.5px] align-middle">{row.instrument || '—'}</td>
+      <td className="px-3 py-2 font-mono text-[10.5px] text-slate-400 align-middle">{row.frequency}</td>
+      <td className="px-3 py-2 text-[11.5px] text-slate-400 align-middle">{row.place}</td>
     </>
   );
 
   const sharedRight = (
     <>
       {/* Doc upload */}
-      <td rowSpan={2} className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle">
         {locked ? (
           <span className="text-[10.5px] text-slate-400">{row.docFile ? `✅ ${row.docFile}` : '—'}</span>
         ) : (
@@ -145,7 +139,7 @@ function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onD
       </td>
 
       {/* Remark */}
-      <td rowSpan={2} className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle">
         {locked ? (
           <span className="text-[11.5px] text-slate-400">{row.remark || '—'}</span>
         ) : (
@@ -159,7 +153,7 @@ function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onD
       </td>
 
       {/* Delete */}
-      <td rowSpan={2} className="px-3 py-2 align-middle">
+      <td className="px-3 py-2 align-middle">
         {!locked && canDelete && (
           <button
             onClick={() => onDelete(rIdx)}
@@ -171,69 +165,33 @@ function ObsRow({ row, rIdx, isDim, locked, maxObs, onUpdate, onUpdateField, onD
   );
 
   return (
-    <>
-      {/* ── WRL row ──────────────────────────────────────────────────────── */}
-      <tr className="border-b border-slate-100 hover:bg-slate-50/40 transition-colors">
-        {sharedLeft}
-        <td className="px-3 py-1.5 bg-blue-50 border-r border-blue-100">
-          <span className="text-[10.5px] font-bold text-blue-700">WRL</span>
+    <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/40 transition-colors">
+      {sharedLeft}
+      {Array.from({ length: maxObs }, (_, oIdx) => (
+        <td key={oIdx} className="px-2 py-1.5">
+          <ObsCell
+            val={wrlObs[oIdx]}
+            spec={row.spec}
+            isDim={isDim}
+            locked={isObservationLocked(oIdx)}
+            onChange={(v) => onUpdate(rIdx, 'wrl', oIdx, v)}
+          />
         </td>
-        {Array.from({ length: maxObs }, (_, oIdx) => (
-          <td key={oIdx} className="px-2 py-1.5">
-            <ObsCell
-              val={wrlObs[oIdx]}
-              spec={row.spec}
-              isDim={isDim}
-              locked={isObservationLocked(oIdx)}
-              onChange={(v) => onUpdate(rIdx, 'wrl', oIdx, v)}
-            />
-          </td>
-        ))}
-        <td className="px-3 py-2 align-middle">
-          {wrlResult.result === '—'
-            ? <span className="text-slate-300 text-[11.5px]">—</span>
-            : <span className={`font-mono text-[11.5px] font-bold ${wrlResult.ok === false ? 'text-red-600' : 'text-green-600'}`}>{wrlResult.result}</span>}
-        </td>
-        <td className="px-3 py-2 align-middle">
-          {wrlResult.ok === null
-            ? <span className="text-slate-300 text-[11.5px]">—</span>
-            : wrlResult.ok
-            ? <span className="inline-block text-[11px] font-bold text-green-700 bg-green-50 border border-green-300 px-2 py-0.5 rounded">✓ PASS</span>
-            : <span className="inline-block text-[11px] font-bold text-red-700 bg-red-50 border border-red-300 px-2 py-0.5 rounded">✕ FAIL</span>}
-        </td>
-        {sharedRight}
-      </tr>
-
-      {/* ── Vendor row ───────────────────────────────────────────────────── */}
-      <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/40 transition-colors">
-        <td className="px-3 py-1.5 bg-purple-50 border-r border-purple-100">
-          <span className="text-[10.5px] font-bold text-purple-700">Vendor</span>
-        </td>
-        {Array.from({ length: maxObs }, (_, oIdx) => (
-          <td key={oIdx} className="px-2 py-1.5">
-            <ObsCell
-              val={vendorObs[oIdx]}
-              spec={row.spec}
-              isDim={isDim}
-              locked={isObservationLocked(oIdx)}
-              onChange={(v) => onUpdate(rIdx, 'vendor', oIdx, v)}
-            />
-          </td>
-        ))}
-        <td className="px-3 py-2 align-middle">
-          {vendorResult.result === '—'
-            ? <span className="text-slate-300 text-[11.5px]">—</span>
-            : <span className={`font-mono text-[11.5px] font-bold ${vendorResult.ok === false ? 'text-red-600' : 'text-green-600'}`}>{vendorResult.result}</span>}
-        </td>
-        <td className="px-3 py-2 align-middle">
-          {vendorResult.ok === null
-            ? <span className="text-slate-300 text-[11.5px]">—</span>
-            : vendorResult.ok
-            ? <span className="inline-block text-[11px] font-bold text-green-700 bg-green-50 border border-green-300 px-2 py-0.5 rounded">✓ PASS</span>
-            : <span className="inline-block text-[11px] font-bold text-red-700 bg-red-50 border border-red-300 px-2 py-0.5 rounded">✕ FAIL</span>}
-        </td>
-      </tr>
-    </>
+      ))}
+      <td className="px-3 py-2 align-middle">
+        {wrlResult.result === '—'
+          ? <span className="text-slate-300 text-[11.5px]">—</span>
+          : <span className={`font-mono text-[11.5px] font-bold ${wrlResult.ok === false ? 'text-red-600' : 'text-green-600'}`}>{wrlResult.result}</span>}
+      </td>
+      <td className="px-3 py-2 align-middle">
+        {wrlResult.ok === null
+          ? <span className="text-slate-300 text-[11.5px]">—</span>
+          : wrlResult.ok
+          ? <span className="inline-block text-[11px] font-bold text-green-700 bg-green-50 border border-green-300 px-2 py-0.5 rounded">✓ PASS</span>
+          : <span className="inline-block text-[11px] font-bold text-red-700 bg-red-50 border border-red-300 px-2 py-0.5 rounded">✕ FAIL</span>}
+      </td>
+      {sharedRight}
+    </tr>
   );
 }
 
@@ -270,7 +228,6 @@ export default function ObsSection({
   const headers = [
     'Sr', 'Checkpoint', 'Specification', 'UOM',
     'Instrument', 'Frequency', 'Place',
-    'Type',       // WRL / Vendor label column
     ...obsCols,
     'Avg', 'Result', 'Doc', 'Remark', '',
   ];

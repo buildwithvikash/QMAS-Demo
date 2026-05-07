@@ -44,7 +44,6 @@ const mergeJIRWithSpecs = (jir, specs) => {
       place: spec.place,
       observations: existing?.observations || [null, null, null],
       wrlObservations: existing?.wrlObservations ?? (existing?.observations || [null, null, null]),
-      vendorObservations: existing?.vendorObservations || [],
       remark: existing?.remark || '',
       docFile: existing?.docFile || null,
     });
